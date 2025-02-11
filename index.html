@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Lock the viewport to mobile portrait -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>O3 Mini High Task Manager – Billion Dollar Edition</title>
+
+  <style>
+    /* RESET / GLOBALS */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+    html, body {
+      background-color: #000;  /* Rich black background */
+      color: #fff;             /* White text for contrast */
+      width: 100%;
+      height: 100%;
+      overflow: hidden;        /* Prevent scrolling - app style */
+    }
+    .smooth {
+      transition: all 0.2s ease;
+    }
+
+    /* APP LAYOUT */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 80px;
+      min-width: 80px;
+      background-color: #111;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      position: relative;
+    }
+    .sidebar .add-button {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: #000;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+      transition: transform 0.2s ease;
+    }
+    .sidebar .add-button:hover {
+      transform: scale(1.05);
+    }
+    .sidebar .add-button:active {
+      transform: scale(0.95);
+    }
+    .sidebar .task-input {
+      display: none;
+      width: 70%;
+      padding: 6px;
+      background-color: #222;
+      border: 1px solid #444;
+      color: #fff;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      outline: none;
+    }
+    .sidebar .task-input.show {
+      display: block;
+    }
+    .sidebar .custom-pills {
+      margin-top: 10px;
+      width: 100%;
+      padding: 0 5px;
+      overflow-y: auto;
+    }
+    .sidebar .custom-pill {
+      background-color: #444;
+      margin: 5px 0;
+      padding: 5px 8px;
+      border-radius: 15px;
+      text-align: center;
+      cursor: move;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid #666;
+    }
+    .live-clock {
+      position: absolute;
+      bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+      width: 100%;
+      color: #ccc;
+    }
+
+    /* MAIN TIMELINE AREA */
+    .main {
+      flex: 1;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 10px;
+      position: relative;
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 10px;
+    }
+    .time-slot {
+      display: flex;
+      align-items: center;
+      background-color: #111;
+      border-radius: 8px;
+      padding: 8px;
+      border: 1px solid #333;
+      position: relative;
+      min-height: 80px;
+    }
+    .time-label {
+      width: 60px;
+      text-align: center;
+      font-size: 14px;
+      margin-right: 10px;
+      flex-shrink: 0;
+      color: #aaa;
+    }
+    .medication-container {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      justify-content: space-around;
+    }
+    .pill-3d-container {
+      width: 80px;
+      height: 80px;
+      border: 1px dashed #333;
+      position: relative;
+      margin-right: 5px;
+      flex-shrink: 0;
+    }
+    .pill-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .med-droppable {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed #555;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .med-droppable.highlight {
+      border-color: #0f0;
+    }
+    .custom-droppable-zone {
+      flex: 1;
+      height: 80px;
+      margin-left: 10px;
+      border: 2px dashed #888;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .custom-droppable-zone.highlight {
+      border-color: #fff;
+    }
+  </style>
+
+</head>
+<body>
+<div class="app-container">
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <!-- Premium Add Button -->
+    <div class="add-button smooth" id="addButton">+</div>
+    <!-- Hidden task input -->
+    <input
+      type="text"
+      class="task-input"
+      id="taskInput"
+      placeholder="Voer taak in…"
+    />
+    <!-- Custom Pills Container -->
+    <div class="custom-pills" id="customPills"></div>
+    <!-- Live clock -->
+    <div class="live-clock" id="liveClock">--:--</div>
+  </div>
+
+  <!-- MAIN TIMELINE CONTENT -->
+  <div class="main">
+    <div class="timeline" id="timeline">
+      <!-- Slots from 08:00 to 00:00 are generated in app.js -->
+    </div>
+  </div>
+</div>
+
+<!-- LOCAL SCRIPTS (Order: three, gsap, interact, then app) -->
+<script src="./js/three.min.js"></script>
+<script src="./js/gsap.min.js"></script>
+<script src="./js/interact.min.js"></script>
+<script src="./js/app.js"></script>
+
+</body>
+</html>
